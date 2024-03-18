@@ -14,8 +14,9 @@ set4 <- read.table(paste0("./RNA_Seq_LALO/Heart/GENE_Heart_Conditions_",compare,
 }
 
 ##########################
-#Regular venn plot
+###Regular venn plot
 ###ggven
+##########################
 library(ggvenn)
 x1 <- list(
   Gonad = set1$V1, 
@@ -140,12 +141,6 @@ df3<-as.data.frame(df3)
 names(df3)<-df4
 df3
 
-######venneuler Proportional 
-#Sys.setenv(JAVA_HOME="C:\\Program Files (x86)\\Java\\jre1.8.0_311") #change R to 32 bit #install.packages("rJava")  
-# library(rJava)
-# library("venneuler")
-# plot(venneuler(c("Snowstorm"=1539,"Extreme_spring"=70,"Extreme_spring&Snowstorm"=92
-#                  )))
 
 for (i in 1:length(df3)){
   GRP=colnames(df3)[i]
@@ -154,16 +149,10 @@ for (i in 1:length(df3)){
   cat(paste0('"',GRP,'"',"=",VALUE,','))
 }
 
-#plot(venneuler(c("D"=64,"C"=86,"C&D"=53,"B"=133,"B&D"=73,"B&C"=105,"B&C&D"=56,"A"=51,"A&D"=24,"A&C"=45,"A&C&D"=22,"A&B"=57,"A&B&D"=28,"A&B&C"=43,"A&B&C&D"=30)))
-###https://cran.r-project.org/web/packages/eulerr/vignettes/introduction.html
-####manually copy-paste
-#fit1<-euler(c("D"=64,"C"=86,"C&D"=53,"B"=133,"B&D"=73,"B&C"=105,"B&C&D"=56,"A"=51,"A&D"=24,"A&C"=45,"A&C&D"=22,"A&B"=57,"A&B&D"=28,"A&B&C"=43,"A&B&C&D"=30))
-
 #####manually copy-paste#####
 fit1<-euler(c(
   "Snowstorm"=99,"Extreme_spring"=10
   ))
- 
 p1<-plot(fit1,
          #quantities = TRUE,
          quantities=list(cex=1.5),
@@ -181,27 +170,4 @@ pdf(file=paste0("21_vs_43_",compare,'.pdf'),
 p1
 dev.off()
 
-#########
-
-# ###ggVennDiagram
-#color layout is not the best
-library("ggVennDiagram")
-# 
-# ggVennDiagram(x1, 
-#               label='count',
-#               label_size =6,
-#               set_size = 5,
-#               color='black',
-#               label_alpha = 0)+
-#   #  scale_color_manual(values =c("#00AFBB","#FC4E07",'darkblue',"#E7B800"))+ #cannot use my own color#
-#   scale_fill_distiller(palette = "Reds", direction = 1)
-#   scale_y_continuous(expand = expansion(mult = .1))
-
-# ###gplots
-# ###can get the number out of it but seems stupid
-# library(gplots)
-# v.table <- venn(x)
-# print(v.table)
-# attr(v.table,"intersections")
-
-
+####end#####
