@@ -31,7 +31,6 @@ outsheets=NULL
     try(expr=eval(parse(text=paste0("TS <- TISSUE[",j,"]"))),silent = T)
     try(expr=print(TS),silent = T)
     wd=paste0("./RNA_Seq_LALO/",TS)
-    #wd=paste0("./RNA_2LALO/",TS)
     setwd(wd)
 
     for (i in 1:length(dat2$x)){
@@ -65,15 +64,13 @@ for (j in seq(ITERA)){  #seq(ITERA)
   
   try(expr=eval(parse(text=paste0("TS <- TISSUE[",j,"]"))),silent = T)
   try(expr=print(TS),silent = T)
-  #wd=paste0("./RNA_Seq_LALO/",TS)
   wd=paste0("./RNA_2LALO/",TS)
   setwd(wd)
   
-  #for (i in 1:length(dat2$x)){
   i=3
   Base=dat2$x[i] #3 #dat2$x[i]
   Case=dat2$y[i] #4 #dat2$y[i]
-  n=paste(TS,"Conditions",Case,"VS",Base,sep="_")
+  n=paste(TS,Case,"VS",Base,sep="_") #different input name
   n
   UP <- read.table(paste0(n,"_Volcano_UP.txt"),header=T,sep="\t")
   DOWN <- read.table(paste0(n,"_Volcano_DOWN.txt"),header=T,sep="\t")
@@ -86,7 +83,7 @@ for (j in seq(ITERA)){  #seq(ITERA)
   sheets<-eval(parse(text = paste0('list(', SHEET,' = ALL)')))
   outsheets <- c( outsheets,sheets)
 }
-#}
+
 
 write_xlsx(outsheets, "./Paper1_LALO/Table_DEG.xlsx")
 
