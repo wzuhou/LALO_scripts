@@ -1,130 +1,175 @@
-#######draw_v_U_D(exprSet,DEseq_DEG,paste0(prefix))
-{library(stringr)
-  library(ggplot2)
-  library(ggrepel)
+{suppressPackageStartupMessages(library(circlize))
+suppressPackageStartupMessages(library(ComplexHeatmap))
+library("wesanderson")
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(plyr)
+setwd("./WCS_Genome/circos_plot//")
+}
+#load chromosome coordinates
+chrs = read.table("CHR_coords_1.bed", colClasses = c("character", "numeric", "numeric", "character"), sep = "\t")
+names(chrs)<-c('scaffold','start','end','chr')
+#Chr name manipulate
+KeyMatch<-read.table('./WCS_Genome/circos_plot/Compare_chr_list.sort',header=F,col.names=c('chr','Chromosome'))
+
+chrs<-chrs%>%
+  filter(chr!='W')
+{#Read-in
+  # GC
+GC <- read.table("GC_CONTENT_200k_bedtools_nuc.bed")
+colnames(GC) <- c("chr", "start", "end", "GC")
+GC <- plyr::join(GC,KeyMatch,by="chr",type='left')
+GC$chr=GC$Chromosome
+GC <- GC[,1:4]
+GC$chr<-as.factor(as.character(GC$chr))
+  # repeat
+repeat_density_p <- read.table("REPEATS_200k.bed")#REPEATS_200k.bed
+colnames(repeat_density_p) <- c("chr", "start", "end", "ovl")
+repeat_density_p <- plyr::join(repeat_density_p,KeyMatch,by="chr",type='left')
+repeat_density_p$chr=repeat_density_p$Chromosome
+repeat_density_p =repeat_density_p[,-5] 
+repeat_density_p$chr<-as.factor(as.character(repeat_density_p$chr))
+  # Gaps and Ns
+Ns <- read.table("Ns_200k.bed") #Ns_200k.bed
+colnames(Ns) <- c("chr", "start", "end", "Ns")
+Ns <- plyr::join(Ns,KeyMatch,by="chr",type='inner')
+Ns$chr=Ns$Chromosome
+Ns <- Ns[,-5]
+Ns$chr<-as.factor(as.character(Ns$chr))
 }
 
-#need_DEG=DEseq_DEG
-#n=paste0(prefix)
 
-draw_v_U_D <- function(exprSet,need_DEG,n='DEseq2'){
-## we only need two columns of DEG, which are log2FoldChange and pvalue
-# ## heatmap
-# library(pheatmap)
-# choose_gene=head(rownames(need_DEG),50) ## 50 maybe better
-# choose_matrix=exprSet[choose_gene,]
-# choose_matrix=t(scale(t(choose_matrix)))
-# pheatmap(choose_matrix,filename = paste0(n,'_need_DEG_top50_heatmap.png'))
-#logFC_cutoff <- with(need_DEG,mean(abs( log2FoldChange)) + 2*sd(abs(log2FoldChange)) )
-logFC_cutoff=0.58
-
-need_DEG$change = as.factor(ifelse(need_DEG$padj < 0.05 & abs(need_DEG$log2FoldChange) > logFC_cutoff,
-                                   ifelse(need_DEG$log2FoldChange > logFC_cutoff ,'UP','DOWN'),'NOT')
-)
-#table(need_DEG$change)
-
-
-need_DEG$Gene <- str_split(row.names(need_DEG), "[.]",simplify = T)[,1]#####Change gene name
-#need_DEG$Gene <- row.names(need_DEG)
-
-write.table(subset(need_DEG,change=="UP"),
-            paste0(n,"_Volcano_UP.txt"),row.names=F,quote=F,sep="\t")
-write.table(subset(need_DEG,change=="DOWN"),
-            paste0(n,"_Volcano_DOWN.txt"),row.names=F,quote=F,sep="\t")
-write.table(row.names(subset(need_DEG,change=="UP")),
-            paste0("GENE_",n,"_Volcano_UP.txt"),row.names=F,quote=F,sep="\t",col.names=F)
-write.table(row.names(subset(need_DEG,change=="DOWN")),
-            paste0("GENE_",n,"_Volcano_DOWN.txt"),row.names=F,quote=F,sep="\t",col.names=F)
-write.table(row.names(subset(need_DEG,change=="UP" |change=="DOWN")),
-            paste0("GENE_",n,"_Volcano_ALL.txt"),row.names=F,quote=F,sep="\t",col.names=F)
-
-this_tile <- paste0(n ,
-                     # '\nCutoff for logFC is ',round(logFC_cutoff,3),
-                     '\nUP gene: ',nrow(need_DEG[need_DEG$change =='UP',]) ,
-                    '\nDOWN gene: ',nrow(need_DEG[need_DEG$change =='DOWN',])
-)
-
-#########Optional: highlight & label############
-# Add highlight and annotation information
-need_DEG<-need_DEG %>%
-  #mutate( is_highlight=ifelse( -log10(padj)>max(-log10(padj))*0.95 ,"yes", "no")) %>%
-  #mutate( is_annotate=ifelse(Gene %in% GeneOfInterest &row_number()<=5, "yes", "no")) #if in the list and top 10 rows
-  #mutate( is_annotate=ifelse(Gene %in% GeneOfInterest&-log10(padj)>max(-log10(padj))*0.95 , "yes", "no")) #if in the list and top 5% Pval
-  mutate( is_annotate=ifelse(Gene %in% GeneOfInterest & change != 'NOT' & str_detect(Gene, "^(?!LOC[0-9]*)") & row_number()<=20, "yes", "no")) 
-#liver 43  & rownames(need_DEG)!='NPAS2.1' 
-#&str_detect(Gene, "^(?!MCM[0-9]*)")
-# mutate( is_annotate=ifelse(row_number()<=5 & change != 'NOT' & str_detect(Gene, "^(?!LOC[0-9]*)") &str_detect(Gene, "^(?!Scaffold.*)") | Gene=='FKBP5' , "yes", "no")) #if top 5
-#mutate( is_annotate=ifelse(-log10(padj)>max(-log10(padj))*0.95 , "yes", "no")) #if pval top 0.05
-
-#table(need_DEG$is_annotate)
-#need_DEG%>%  filter(is_annotate =='yes')
-
-#########Making plots#####################
-paste0('g',i,j,k)
-assign(paste0('g',i,j,k),
-       ggplot(data=need_DEG, aes(x=log2FoldChange, y=-log10(padj), color=change)) +
-         geom_point(alpha=0.8, size=1.8) +
-         ####################OPTIONAL
-         # Add highlighted points
-         #geom_point(data=subset(need_DEG, is_highlight=="yes"), color="firebrick4", size=2,alpha=0.8) +
-         # Add label using ggrepel to avoid overlapping
-         geom_label_repel(data=subset(need_DEG, is_annotate=="yes"), aes(label=Gene), size=2.5,max.overlaps =15 ) +
-         ####################OPTIONAL
-         theme_set(theme_set(theme_classic(base_size=15)))+
-         #xlab("log2 fold change") + ylab("-log10 FDR P-value") +
-         ggtitle( this_tile ) +
-         #scale_colour_manual(values = c('dodgerblue4','black','firebrick4')) ## corresponding to the levels(res$change)+
-         scale_colour_manual(values = c('#3B9AB2','black','#EBCC2A'))+
-         theme_classic()+
-         expand_limits(x = 0, y = 0)+
-         theme(
-           #text = element_text(size = 22),
-           plot.title = element_text(size=10,hjust = 0.5), #hjust adjust the position with 1 aligning to right
-           axis.title.x=element_blank(),axis.title.y=element_blank(),
-           legend.position = "none")
-)
-# ##when you need to made changes to the figure
-# for (j in seq(1,4)){
-#   for (i in seq(1,3)){
-#     print(paste0('g',i,j))
-# assign(paste0('g',i,j),
-#        eval(parse(text=paste0('g',i,j)))+  
-#   theme(axis.title.x=element_blank(),axis.title.y=element_blank()))
-# }}
-
-#eval(parse(text=paste0('g',i,j,k)))
-ggsave(eval(parse(text=paste0('g',i,j,k))) ,filename = paste0("DEseq2_",n,'_volcano.png'),width = 4,height = 4)
-########
-#save grid arrange
-# my_list<-vector()
-# for (k in c(1,3,2)){
-#     for (l in seq(1:4)){
-#     my_list<-c(my_list,paste0('g',k,l))
-#   }
-# }
-# my_list=c(my_list)
-# glist <-paste0(my_list,collapse=',')
-# library('gridExtra')
-# grid.arrange(g11,g12,g13,g14,g31,g32,g33,g34,g21,g22,g23,g24, ncol = 4) ## display plot
-#ggsave(filename = "C:/Users/zwu33/Downloads/ROSLIN/WCS/WCS_RNA/RNA_Seq_LALO/DEGs_all_label.png", arrangeGrob(g11,g12,g13,g14,g31,g32,g33,g34,g21,g22,g23,g24,ncol = 4),dpi = 600,width = 8,height = 8)  ## save plot
-
-#save each
-#for (g in my_list){
-#ggsave(eval(parse(text=paste0(g))),filename = paste0("C:/Users/zwu33/Downloads/ROSLIN/RNA_Seq_LALO/DEGs_all_label_fig/",g,".png"),width = 4,height = 4)
-#}
-
-#plot_grid(g11,g12,g13,g14,g31,g32,g33,g34,g21,g22,g23,g24, align = "v", ncol = 4)
-
-# library(patchwork)
-# (plots = wrap_plots(g11,g12,g13,g14,g31,g32,g33,g34,g21,g22,g23,g24, ncol = 4)) +
-#    # plot_annotation(title = "log2 fold change",
-#     #                subtitle = "-log10 FDR P-value") &
-#     theme(text = element_text(size = 5),
-#           axis.title.x=element_blank())
-          #plot.title = element_text(vjust = -110, hjust = 0.50),
-          #plot.subtitle = element_text(vjust = -55, hjust = -0.01, size = 12))
-ggsave(eval(parse(text=paste0('g',i,j,k))) ,filename = paste0("DEseq2_",n,'_volcano.png'),width = 4,height = 4)
-#ggsave(g,filename = paste0("Selected_DEseq2_Vol_",n,'_volcano_Label_Highlight.png'),width = 4,height = 4)
-#ggsave(g,filename = 'M:/ROSLIN/RNA_Seq_LALO/Legend.png',width = 4.5,height = 4.5)
+{#set text and tracks color
+col_text <- "grey8"
+col_track1 <- "grey8"
+col_track2 <- 'gray30' #"azure3" #Gaps and Ns
+col_track3 <- '#CEAB07' # "#ff8400" #Repeat density
+col_track4 <-   '#F3DF6C'#"#ffd000" #GC
+col_track6 <- "#C7B19C" #wes_palette("Chevalier1")
 }
 
+####
+#Check if all chr info exist
+all(!is.na(Ns$chr)) #should be TRUE
+Ns[is.na(Ns$chr),]
+Ns[Ns$Ns==300,]
+#############
+####PLOT#####
+#############
+{
+#pdf("Chr_circos.pdf", width = 6, height = 6) 
+png("Chr_circos.png", width = 5.5, height = 5.5,units = "in",res=600) #in inches
+
+circos.clear()
+circos.par(points.overflow.warning=FALSE, "start.degree" = 90, canvas.ylim = c(-1,1), canvas.xlim = c(-1.1,1.1), "cell.padding" = c(0,0,0,0), "gap.degree" = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,    2,2,2,2,2,2,2,2,2,2, 8))
+circos.initialize(factors=chrs$chr, xlim=matrix(c(chrs$start,chrs$end),ncol=2))
+
+#TRACK 1 - CHROMOSOMES
+circos.track(ylim=c(0,1),panel.fun=function(x,y) {
+  chr=CELL_META$sector.index
+  xlim=CELL_META$xlim
+  length= (max(xlim))
+  length_label = paste((format(round(length/(10^6), 1), nsmall = 1)), "", sep="")
+  ylim=CELL_META$ylim
+  
+  if(length > 63258489) {
+    ticks = c(0, 50*10^6,  100*10^6,  200*10^6,  length)
+    labels =  c("0", "50", "100",  "200",  length_label)
+    circos.genomicAxis(h = "top", lwd = 0.2, major.at = ticks, labels = labels, 
+                       labels.cex = 0.5, col=col_text, labels.col=col_text,
+                       labels.facing="clockwise",
+                       major.tick.length = convert_y(0.7, unit=c("mm")))
+  } else if (length > 25880253){
+    ticks = c(0, 50*10^6, 100*10^6, length)
+    labels =  c("0", "50", "100", length_label)
+    circos.genomicAxis(h = "top", lwd = 0.2, major.at = ticks, labels = labels, 
+                       labels.cex = 0.5, col=col_text, labels.col=col_text,
+                       labels.facing="clockwise",
+                       major.tick.length = convert_y(0.7, unit=c("mm")))
+  }else if (length > 16541138){
+    ticks = c(0, length)
+    labels = c("0", length_label)
+    circos.genomicAxis(h = "top", lwd = 0.2, major.at = ticks, labels = labels, 
+                       labels.cex = 0.5, col=col_text, labels.col=col_text,
+                       labels.facing="clockwise",
+                       major.tick.length = convert_y(0.7, unit=c("mm")))
+  } else if (length > 2102120){
+    ticks = c(0, length)
+    labels = c("", length_label)
+    circos.genomicAxis(h = "top", lwd = 0.2, major.at = ticks, labels = labels, 
+                       labels.cex = 0.5, col=col_text, labels.col=col_text,
+                       labels.facing="clockwise",
+                       major.tick.length = convert_y(0.7, unit=c("mm")))
+  } else {
+    ticks = c(length)
+    labels = c(length_label)
+    circos.genomicAxis(h = "top", lwd = 0.2, major.at = ticks, labels = labels, 
+                       labels.cex = 0.5, col=col_text,labels.col=col_text,
+                       labels.facing="clockwise", minor.ticks=0, 
+                       major.tick.length = convert_y(0.7, unit=c("mm")))}
+  
+  circos.text(mean(xlim), mean(ylim), chr, font = c(2), cex=0.48, col=col_track1, facing = "down")
+  
+},bg.col=wes_palette('Moonrise2', 35, type = "continuous") ,bg.border=NA,track.height=0.1)#"grey90"
+
+#LEGEND
+lgd = Legend(labels = c( "1.Chr","2.Ns and Gap","3.Repeats", "4.GC content"),
+             labels_gp = gpar(fontsize=6), legend_gp = gpar(fill = c("#798E87",col_track2,col_track3,col_track4, lwd = 2)),
+             grid_height = unit(3, "mm"), grid_width = unit(3, "mm"))#,col_track5,col_track6, col_track7, col_track8, col_track9, col_track10
+draw(lgd, x = unit(2.5, "in"), y = unit(2, "in"), just = c("left"))
+
+
+
+#TRACK2 -Gaps and Ns
+colnames(Ns) <- c("chr", "start", "end", "Ns")
+
+#add track
+circos.genomicTrackPlotRegion(Ns, track.height = 0.06, panel.fun = function(region, value, ...) {
+  circos.genomicLines(region, value, type = "h", lwd = 0.1, area=TRUE, border= col_track2, col = col_track2, ...)
+}, ylim = range(Ns$Ns), bg.border = NA)
+
+#add y axis
+circos.yaxis(at=c(0, round(max(Ns$Ns)/2,0),(max(Ns$Ns))), labels = c(0,round((max(Ns$Ns)/2),0),(max(Ns$Ns))), sector.index = "1", track.index = get.current.track.index(),
+             labels.cex=0.31, lwd=0, labels.col=col_text, col=col_text, tick = TRUE,
+             tick.length = convert_x(0.4, "mm", sector.index = get.current.sector.index(), track.index=get.current.track.index()))
+
+#TRACK 3 - REPEATS DENSITY
+colnames(repeat_density_p) <- c("chr", "start", "end", "ovl")
+
+#aggregate windows when chr, start, ends coincide
+repeat_desity_p_agg <- aggregate(.~chr+start+end, repeat_density_p, sum)
+
+#calculate fraction of the windows covered by repeats
+repeat_desity_p_agg_percent <- data.frame(repeat_desity_p_agg$chr, repeat_desity_p_agg$start, repeat_desity_p_agg$end, (repeat_desity_p_agg$ovl/(repeat_desity_p_agg$end-repeat_desity_p_agg$start))*100)
+colnames(repeat_desity_p_agg_percent) <- c("chr", "start", "end", "repeats")
+
+#add track
+circos.genomicTrackPlotRegion(repeat_desity_p_agg_percent, track.height = 0.06, panel.fun = function(region, value, ...) {
+  circos.genomicLines(region, value, type = "l", lwd = 0.1, area=TRUE, border= col_track3, col = col_track3,  ...)
+}, ylim = range(repeat_desity_p_agg_percent$repeats), bg.border = NA)
+
+#add y axis
+circos.yaxis(at=c(0, (max(repeat_desity_p_agg_percent$repeats)/2), max(repeat_desity_p_agg_percent$repeats)), labels = c(0,"50","100"), sector.index = "1", track.index = get.current.track.index(),
+             labels.cex=0.31, lwd=0, labels.col=col_text, col=col_text, tick = TRUE,
+             tick.length = convert_x(0.4, "mm", sector.index = get.current.sector.index(), track.index=get.current.track.index()))
+
+#TRACK 4 - GC CONTENT
+
+#in percentage
+#load GC content calculated with bedtools nuc on 200 kbp windows
+colnames(GC) <- c("chr", "start", "end", "GC") 
+
+#add track
+circos.genomicTrackPlotRegion(GC, track.height = 0.06, panel.fun = function(region, value, ...) {
+  circos.genomicLines(region, value, type = "l", lwd = 0.1, area=TRUE, border= col_track4, col = col_track4, ...)
+}, ylim = c(0,1), bg.border = NA)# ylim = range(GC$GC)
+#quantile(GC$GC)
+circos.yaxis(at=c(0.5, 1), labels = c('50',"100"), sector.index = "1", track.index = get.current.track.index(), 
+             labels.cex=0.30, lwd=0, labels.col=col_text, col=col_text, tick = TRUE, 
+             tick.length = convert_x(0.4, "mm", sector.index = get.current.sector.index(), track.index=get.current.track.index())) 
+
+dev.off()
+}
+
+###END###
