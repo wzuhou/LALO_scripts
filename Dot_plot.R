@@ -5,7 +5,6 @@ suppressPackageStartupMessages(library(plotly))
 library('wesanderson')
 
 {setwd('./LALO_genome/Genome_quality/DOT_plot/')
-  plot_size=15
   h_lines=TRUE# TRUE#
   keep_ref=30
   similarity=TRUE #"show % identity (-s): "
