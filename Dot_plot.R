@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# Adopted from tpoorten/dotPlotly 
 ## Make Dot Plot with Percent Divergence on color scale
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(plotly))
