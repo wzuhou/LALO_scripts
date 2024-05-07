@@ -5,13 +5,13 @@ library(dplyr)
 library(stringr)
 library(tidyr)
 library(plyr)
-setwd("./WCS_Genome/circos_plot//")
+setwd("./circos_plot//")
 }
 #load chromosome coordinates
 chrs = read.table("CHR_coords_1.bed", colClasses = c("character", "numeric", "numeric", "character"), sep = "\t")
 names(chrs)<-c('scaffold','start','end','chr')
 #Chr name manipulate
-KeyMatch<-read.table('./WCS_Genome/circos_plot/Compare_chr_list.sort',header=F,col.names=c('chr','Chromosome'))
+KeyMatch<-read.table('./circos_plot/Compare_chr_list.sort',header=F,col.names=c('chr','Chromosome'))
 
 chrs<-chrs%>%
   filter(chr!='W')
