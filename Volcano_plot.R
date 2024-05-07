@@ -11,12 +11,11 @@ n=paste0(prefix)
 
 #######################
 #####Cut-off threshold
-#logFC_cutoff <- with(DEseq_DEG,mean(abs( log2FoldChange)) + 2*sd(abs(log2FoldChange)) )
-logFC_cutoff=0.58
+#logFC_cutoff <- with(DEseq_DEG,mean(abs( log2FoldChange)) + 2*sd(abs(log2FoldChange)) ) #logFC_cutoff=0.58
 DEseq_DEG$change = as.factor(ifelse(DEseq_DEG$padj < 0.05 & abs(DEseq_DEG$log2FoldChange) > logFC_cutoff,
-                                   ifelse(DEseq_DEG$log2FoldChange > logFC_cutoff ,'UP','DOWN'),'NOT')
-)
+                                   ifelse(DEseq_DEG$log2FoldChange > logFC_cutoff ,'UP','DOWN'),'NOT'))
 table(DEseq_DEG$change)
+
 #####Change gene name suffix
 DEseq_DEG$Gene <- str_split(row.names(DEseq_DEG), "[.]",simplify = T)[,1] 
 #Or
@@ -32,8 +31,7 @@ write.table(row.names(subset(DEseq_DEG,change=="UP" |change=="DOWN")),
 this_tile <- paste0(n ,
                      # '\nCutoff for logFC is ',round(logFC_cutoff,3),
                      '\nUP gene: ',nrow(DEseq_DEG[DEseq_DEG$change =='UP',]) ,
-                    '\nDOWN gene: ',nrow(DEseq_DEG[DEseq_DEG$change =='DOWN',])
-)
+                    '\nDOWN gene: ',nrow(DEseq_DEG[DEseq_DEG$change =='DOWN',]))
 
 ###Optional: highlight & label
 # Add highlight and annotation information
