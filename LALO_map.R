@@ -4,7 +4,7 @@ library("sf")
 library("rnaturalearth")
 library("rnaturalearthdata")
 library("ggspatial")
-setwd('M:/ROSLIN/LALO_genome/Map/')
+setwd('./LALO_genome/Map/')
 }
 world <- ne_countries(scale = "medium", returnclass = "sf")
 class(world)
