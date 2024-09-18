@@ -20,12 +20,15 @@ The scripts used to create plots in the LALO genome and stress transcriptomic pa
 stateDiagram
     #[*] --> Lapland_longspur 
     #genome --> [*]
-    RNAseq --> Lapland_longspur
     OmniC --> Lapland_longspur
     PacBio --> Lapland_longspur
+    RNAseq --> Lapland_longspur
     Lapland_longspur --> genome
     genome --> DEG_extreme_events
     RNAseq --> DEG_extreme_events
-    DEG_extreme_events --> Stress_related_DEGs(e.g.,FKBP5)
+    DEG_extreme_events --> Extreme_Spring
+    DEG_extreme_events --> Snowstorm
+Extreme_Spring --> Stress_related_DEGs(e.g.,FKBP5)
+Snowstorm --> Stress_related_DEGs(e.g.,FKBP5)
 
 ```    
