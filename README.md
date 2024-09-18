@@ -24,11 +24,12 @@ stateDiagram
     PacBio --> Lapland_longspur
     RNAseq --> Lapland_longspur
     Lapland_longspur --> genome
-    genome --> DEG_extreme_events
-    RNAseq --> DEG_extreme_events
-    DEG_extreme_events --> Extreme_Spring
-    DEG_extreme_events --> Snowstorm
-Extreme_Spring --> Stress_related_DEGs(e.g.,FKBP5)
-Snowstorm --> Stress_related_DEGs(e.g.,FKBP5)
+    genome --> DEGs_extreme_events
+    RNAseq --> DEGs_extreme_events
+    DEGs_extreme_events --> Extreme_Spring
+    DEGs_extreme_events --> Snowstorm
+Extreme_Spring --> Stress_related_DEGs
+Snowstorm --> Stress_related_DEGs
+              note right of Stress_related_DEGs: e.g., FKBP5
 
 ```    
