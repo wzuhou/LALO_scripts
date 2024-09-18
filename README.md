@@ -10,3 +10,22 @@ The scripts used to create plots in the LALO genome and stress transcriptomic pa
 <p align="center">
   <img src="https://github.com/wzuhou/LALO_scripts/blob/main/Graphic%20abstract.png">
 </p>
+
+
+## Pipeline
+
+```mermaid
+%%{init: {'theme':'forest'}}%%
+
+stateDiagram
+    #[*] --> Lapland_longspur 
+    #genome --> [*]
+    RNAseq --> Lapland_longspur
+    OmniC --> Lapland_longspur
+    PacBio --> Lapland_longspur
+    Lapland_longspur --> genome
+    genome --> DEG_extreme_events
+    RNAseq --> DEG_extreme_events
+    DEG_extreme_events --> Stress_related_DEGs(e.g.,FKBP5)
+
+```    
